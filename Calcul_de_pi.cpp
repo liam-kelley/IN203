@@ -54,19 +54,14 @@ int main( int nargs, char* argv[] )
 		double temp;
 		ratio = approximate_pi(nbpSample);
 		output << "I'm the processus " << rank << " on " << nbp << " processes." << std::endl;
-		output << "mon approximation de pi est" << ratio << std::endl;
+		output << "pi approx " << ratio << std::endl;
 
 		for (int i = 1; i < nbp; ++i) {
 			MPI_Irecv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request);
 			ratio = ratio + temp;
-			output << "je reçois de "<<i <<"la valeur : "
-				<< temp
-				<< std::endl;
+			output << "From "<< i << " value = " << temp << std::endl;
 		}
-	
-		output << "mon approximation total de pi est"
-			<< ratio<<"/"<<nbp<<"="<<ratio/nbp
-			<< std::endl;
+		output << "Total pi approx : " << ratio << "/" << nbp << "=" << ratio/nbp << std::endl;
 		output.close();
 	}
 
@@ -75,9 +70,7 @@ int main( int nargs, char* argv[] )
 	MPI_Send(&ratio, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
 	output << "I'm the processus " << rank << " on " << nbp << " processes." << std::endl;
-	output << "mon approximation de pi est"
-		<< ratio
-		<< std::endl;
+	output << "pi approx is " << ratio << std::endl;
 	output.close();
 
 	MPI_Finalize();
