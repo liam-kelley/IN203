@@ -1,0 +1,45 @@
+chiffre = 400;
+
+numpy.random.seed(1917)
+a1 = numpy.random.randn(chiffre,chiffre) # Matrice de rééls random
+a1 = a1.astype(numpy.float32)
+print(a1.nbytes)
+
+numpy.random.seed(2001)
+a2 = numpy.random.randn(chiffre,chiffre) # Matrice de rééls random
+a2 = a2.astype(numpy.float32)
+print(a2.nbytes)
+
+a3 = numpy.empty_like(a1) # Vecteur de rééls vide
+a3 = a3.astype(numpy.float32)
+print(a3.nbytes)
+
+a1_gpu = cuda.mem_alloc(a1.nbytes)
+a2_gpu = cuda.mem_alloc(a2.nbytes)
+a3_gpu = cuda.mem_alloc(a3.nbytes)
+
+cuda.memcpy_htod(a1_gpu, a1)
+cuda.memcpy_htod(a2_gpu, a2)
+cuda.memcpy_htod(a3_gpu, a3)
+
+mod = SourceModule("""
+__global__ void matrixSummify( int dim_x, int dim_y, float *a1, float *a2, float *a3 )
+{
+  if ((blockIdx.x*blockDim.x + threadIdx.x < dim_x) && (blockIdx.y*blockDim.y + threadIdx.y < dim_y))
+  {
+    int idx = blockIdx.x*blockDim.x + threadIdx.x + (blockIdx.y*blockDim.y + threadIdx.y)*dim_x;
+    a3[idx] = a1[idx] + a2[idx];
+  }
+}
+""")
+
+func = mod.get_function("matrixSummify")
+dim = numpy.int32(chiffre)
+func(dim, dim, a1_gpu, a2_gpu, a3_gpu, block=(16,16,1), grid = (numpy.int((dim+15)/16),numpy.int((dim+15)/16),1))
+
+aSum = numpy.empty_like(a1)
+cuda.memcpy_dtoh(aSum, a3_gpu)
+
+print(f"a1 : {a1}")
+print(f"a2 : {a2}")
+print(f"aSum : {aSum}")

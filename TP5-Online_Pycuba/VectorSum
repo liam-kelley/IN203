@@ -1,0 +1,45 @@
+chiffre = 4;
+
+numpy.random.seed(1917)
+v1 = numpy.random.randn(chiffre,1) # Vecteur de rééls random
+v1 = v1.astype(numpy.float32)
+print(v1.nbytes)
+
+numpy.random.seed(2001)
+v2 = numpy.random.randn(chiffre,1) # Vecteur de rééls random
+v2 = v2.astype(numpy.float32)
+print(v2.nbytes)
+
+v3 = numpy.empty_like(v1) # Vecteur de rééls vide
+v3 = v3.astype(numpy.float32)
+print(v3.nbytes)
+
+v1_gpu = cuda.mem_alloc(v1.nbytes)
+v2_gpu = cuda.mem_alloc(v2.nbytes)
+v3_gpu = cuda.mem_alloc(v3.nbytes)
+
+cuda.memcpy_htod(v1_gpu, v1)
+cuda.memcpy_htod(v2_gpu, v2)
+cuda.memcpy_htod(v3_gpu, v3)
+
+mod = SourceModule("""
+__global__ void summify( int dim_x, float *v1, float *v2, float *v3 )
+{
+  if (blockIdx.x*blockDim.x + threadIdx.x < dim_x) 
+  {
+    int idx = blockIdx.x*blockDim.x + threadIdx.x ;
+    v3[idx] = v1[idx] + v2[idx];
+  }
+}
+""")
+
+func = mod.get_function("summify")
+dim = numpy.int32(300)
+func(dim, v1_gpu, v2_gpu, v3_gpu, block=(chiffre,1,1))
+
+vSum = numpy.empty_like(v1)
+cuda.memcpy_dtoh(vSum, v3_gpu)
+
+print(f"v1 : {v1}")
+print(f"v2 : {v2}")
+print(f"vSum : {vSum}")

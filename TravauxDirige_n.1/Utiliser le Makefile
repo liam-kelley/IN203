@@ -1,0 +1,26 @@
+Il suffit de taper
+make
+dans le bon directory
+
+philippe dit
+make all
+
+hein?
+
+make all créé tout les éxécutables pour tout les cpp...
+ok
+
+------------------------------
+
+UPDATE!
+Tu veut transformer ton truc.cpp en truc.exe en mode parrallele??
+Va dans le MAKEFILE --> Rajoute les lignes qui faut avec les truc.exe truc.cpp correspondants comme ce qu'il y a dans le reste.
+Hesite pas a meme le mettre dans all.
+
+Maintenant tu pourras taper make truc.exe et PAF ca le crééra. make all aussi fonctionnera.
+
+Pour créer un éxécutable pour HelloWorld.cpp:
+faire "make HelloWorld.exe"
+puis pour utiliser l'éxécutable: mpiexec <éxécutable>
+il y a des options disponibles: voir section 2.3 pdf td1
+Pour utiliser un certain nombre de processus: utiliser mpiexec -np <nombre de processus> <éxécutable>
